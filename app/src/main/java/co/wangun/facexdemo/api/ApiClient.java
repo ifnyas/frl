@@ -27,11 +27,12 @@ public class ApiClient {
                 .addInterceptor(interceptor)
                 .build();
 
-        String baseUrl = "https://www.facexapi.com/";
-        //baseUrl = "http://sia.genetrix.cloud/";
+        String baseUrl = "http://www.facexapi.com/";
 
+//        Gson builder = new GsonBuilder().disableHtmlEscaping().create();
         retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
+//                .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client)
                 .build();

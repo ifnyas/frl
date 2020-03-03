@@ -9,7 +9,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.hardware.Camera;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.util.Log;
@@ -32,7 +31,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +46,9 @@ import co.wangun.facexdemo.utils.ImageUtils;
 import co.wangun.facexdemo.utils.ImgConverter;
 import co.wangun.facexdemo.utils.SessionManager;
 import co.wangun.facexdemo.utils.Util;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -103,29 +104,9 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
     //==============================================================================================
     private ImagePreviewAdapter imagePreviewAdapter;
     private ArrayList<Bitmap> facesBitmap;
+
     //yas
     private BaseApiService mApiService;
-
-    private static void SaveImage(Bitmap finalBitmap) {
-
-        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
-        File myDir = new File(root + "/savedImages");
-        myDir.mkdirs();
-
-        String fname = "face.jpg";
-        File file = new File(myDir, fname);
-        if (file.exists()) file.delete();
-
-        try {
-            FileOutputStream out = new FileOutputStream(file);
-            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-            out.flush();
-            out.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Initializes the UI and initiates the creation of a face detector.
@@ -500,33 +481,30 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
     private void RecogFaces(String scanned) {
         mApiService = ApiClient.getClient().create(BaseApiService.class);
 
-//        Log.d("RRR user_id", getString(R.string.user_id));
-//        Log.d("RRR img_1", getString(R.string.face_sample));
-//        Log.d("RRR img_2", scanned);
+        File file1 = new File("/storage/emulated/0/savedImages/face1.jpg");
+        RequestBody requestFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
+        MultipartBody.Part body1 = MultipartBody.Part.createFormData("img_1", file1.getName(), requestFile1);
 
-        mApiService.matchFaces(
-                getString(R.string.user_id),
-//                "application/x-www-form-urlencoded",
-                getString(R.string.face_sample),
-                scanned
-                //"",
-                //""
-        )
+        File file2 = new File("/storage/emulated/0/savedImages/face2.jpg");
+        RequestBody requestFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
+        MultipartBody.Part body2 = MultipartBody.Part.createFormData("img_2", file2.getName(), requestFile2);
+
+        mApiService.matchFaces(getString(R.string.user_id), body1, body2)
                 .enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                         Log.d("RRR onResponse", "onResponse");
                         if (response.isSuccessful()) {
-                            Log.d("RRRCode", "Response successful");
+                            Log.d("RRR Response", "Response successful");
                             try {
-                                JSONObject jsonRESULTS = new JSONObject(String.valueOf(response.body()));
-                                Log.d("RRRCode", jsonRESULTS.toString());
+                                JSONObject jsonRESULTS = new JSONObject(response.body().string());
+                                Log.d("RRR Code", jsonRESULTS.getString("status"));
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                Log.e("RRRError", e.toString());
+                                Log.e("RRR Exception", e.toString());
                             }
                         } else {
-                            Log.e("RRRError", "Response not successful");
+                            Log.e("RRR Rns", "Response not successful");
                         }
                     }
 
@@ -684,10 +662,9 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
 
                                                 Bitmap resizedBitmap = Bitmap.createScaledBitmap(
                                                         faceCroped, 128, 128, false);
-//
+                                                ImgConverter.SaveImage(resizedBitmap, "face2");
                                                 imagePreviewAdapter.add(resizedBitmap);
                                                 RecogFaces(ImgConverter.convert(resizedBitmap));
-                                                //SaveImage(resizedBitmap);
                                             }
                                         }
                                     });

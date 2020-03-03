@@ -2,9 +2,12 @@ package co.wangun.facexdemo.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.util.Base64;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 
 public class ImgConverter {
 
@@ -22,6 +25,28 @@ public class ImgConverter {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
 
         return Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP);
+    }
+
+
+    public static void SaveImage(Bitmap finalBitmap, String name) {
+
+        String root = Environment.getExternalStorageDirectory().getAbsolutePath();
+        File myDir = new File(root + "/savedImages");
+        myDir.mkdirs();
+
+        String fname = name + ".jpg";
+        File file = new File(myDir, fname);
+        if (file.exists()) file.delete();
+
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
