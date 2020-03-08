@@ -9,7 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 
-public class ImgConverter {
+public class BmpConverter {
 
     public static Bitmap convert(String base64Str) throws IllegalArgumentException {
         byte[] decodedBytes = Base64.decode(
@@ -31,7 +31,7 @@ public class ImgConverter {
     public static void SaveImage(Bitmap finalBitmap, String name) {
 
         String root = Environment.getExternalStorageDirectory().getAbsolutePath();
-        File myDir = new File(root + "/savedImages");
+        File myDir = new File(root + "/FacexDemo");
         myDir.mkdirs();
 
         String fname = name + ".jpg";

@@ -6,16 +6,24 @@
     android:orientation="vertical">
 
     <Button
-        android:id="@+id/btnGray"
+        android:id="@+id/register"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="Start" />
+        android:text="Register" />
+
+    <Button
+        android:id="@+id/recognize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="Recognize" />
 
     <Button
         android:id="@+id/clear"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="Clear Session" />
+        android:text="Clear Data"
+        android:visibility="invisible" />
 </LinearLayout>

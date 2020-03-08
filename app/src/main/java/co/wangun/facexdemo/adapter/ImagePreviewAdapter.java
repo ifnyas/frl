@@ -3,7 +3,6 @@ package co.wangun.facexdemo.adapter;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 
 import co.wangun.facexdemo.R;
-import co.wangun.facexdemo.utils.ImgConverter;
+import co.wangun.facexdemo.utils.BmpConverter;
 
 public class ImagePreviewAdapter extends
         RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -61,8 +60,6 @@ public class ImagePreviewAdapter extends
         Bitmap bmp = Bitmap.createScaledBitmap(bitmaps.get(i), size, size, false);
         holder.imgPreview.setImageBitmap(bmp);
 
-        Log.d("BBB", "i: " + i + ", check: " + check);
-
         if (i == check) {
             holder.layoutCheck.setVisibility(View.VISIBLE);
             //holder.loading.setVisibility(View.GONE);
@@ -84,7 +81,7 @@ public class ImagePreviewAdapter extends
     }
 
     public String setBmp(int i) {
-        return ImgConverter.convert(bitmaps.get(i));
+        return BmpConverter.convert(bitmaps.get(i));
     }
 
     public void add(Bitmap bitmap) {

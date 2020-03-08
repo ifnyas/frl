@@ -2,7 +2,7 @@ package co.wangun.facexdemo.model;
 
 import android.graphics.PointF;
 
-public class FaceResult extends Object {
+public class FaceResult {
 
     private PointF midEye;
     private float eyeDist;

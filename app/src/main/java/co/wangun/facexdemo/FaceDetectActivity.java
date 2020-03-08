@@ -3,10 +3,14 @@ package co.wangun.facexdemo;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,16 +26,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.luxand.FSDK;
+
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,12 +48,11 @@ import co.wangun.facexdemo.adapter.ImagePreviewAdapter;
 import co.wangun.facexdemo.api.ApiClient;
 import co.wangun.facexdemo.api.BaseApiService;
 import co.wangun.facexdemo.model.FaceResult;
-import co.wangun.facexdemo.utils.CameraErrorCallback;
+import co.wangun.facexdemo.utils.BmpConverter;
+import co.wangun.facexdemo.utils.DisplayUtils;
 import co.wangun.facexdemo.utils.FaceOverlayView;
 import co.wangun.facexdemo.utils.ImageUtils;
-import co.wangun.facexdemo.utils.ImgConverter;
 import co.wangun.facexdemo.utils.SessionManager;
-import co.wangun.facexdemo.utils.Util;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -59,12 +66,11 @@ import retrofit2.Response;
  * COMPARE FPS (DETECT FRAME PER SECOND) OF 2 METHODs FOR MORE DETAIL
  */
 
-public final class FaceDetectGrayActivity extends AppCompatActivity implements SurfaceHolder.Callback, Camera.PreviewCallback {
+public final class FaceDetectActivity extends AppCompatActivity implements SurfaceHolder.Callback, Camera.PreviewCallback, Camera.ErrorCallback {
 
-    public static final String TAG = FaceDetectGrayActivity.class.getSimpleName();
+    //FaceDetectActivity
+    public static final String TAG = FaceDetectActivity.class.getSimpleName();
     private static final int MAX_FACE = 10;
-    // Log all errors:
-    private final CameraErrorCallback mErrorCallback = new CameraErrorCallback();
     // fps detect face (not FPS of camera)
     long start, end;
     int counter = 0;
@@ -116,25 +122,23 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
         super.onCreate(icicle);
 
         setContentView(R.layout.activity_camera_viewer);
-        if (android.os.Build.VERSION.SDK_INT > 9) {
-            StrictMode.ThreadPolicy policy = new
-                    StrictMode.ThreadPolicy.Builder().permitAll().build();
-            StrictMode.setThreadPolicy(policy);
-        }
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
         mView = findViewById(R.id.surfaceview);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        // Now create the OverlayView:
+        // Create Face Overlay View:
         mFaceView = new FaceOverlayView(this);
-        addContentView(mFaceView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        // Create and Start the OrientationListener:
+        addContentView(mFaceView, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        ));
 
         recyclerView = findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-
 
         handler = new Handler();
         faces = new FaceResult[MAX_FACE];
@@ -143,7 +147,6 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
             faces[i] = new FaceResult();
             faces_previous[i] = new FaceResult();
         }
-
 
         getSupportActionBar().setDisplayShowTitleEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
@@ -297,13 +300,13 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
     }
 
     private void setErrorCallback() {
-        mCamera.setErrorCallback(mErrorCallback);
+        mCamera.setErrorCallback(this);
     }
 
     private void setDisplayOrientation() {
         // Now set the display orientation:
-        mDisplayRotation = Util.getDisplayRotation(FaceDetectGrayActivity.this);
-        mDisplayOrientation = Util.getDisplayOrientation(mDisplayRotation, cameraId);
+        mDisplayRotation = DisplayUtils.getDisplayRotation(FaceDetectActivity.this);
+        mDisplayOrientation = DisplayUtils.getDisplayOrientation(mDisplayRotation, cameraId);
 
         mCamera.setDisplayOrientation(mDisplayOrientation);
 
@@ -324,7 +327,7 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
     private void setOptimalPreviewSize(Camera.Parameters cameraParameters, int width, int height) {
         List<Camera.Size> previewSizes = cameraParameters.getSupportedPreviewSizes();
         float targetRatio = (float) width / height;
-        Camera.Size previewSize = Util.getOptimalPreviewSize(this, previewSizes, targetRatio);
+        Camera.Size previewSize = DisplayUtils.getOptimalPreviewSize(this, previewSizes, targetRatio);
         previewWidth = previewSize.width;
         previewHeight = previewSize.height;
 
@@ -417,14 +420,13 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
         if (imagePreviewAdapter == null) {
             facesBitmap = new ArrayList<>();
             imagePreviewAdapter = new ImagePreviewAdapter(
-                    FaceDetectGrayActivity.this,
+                    FaceDetectActivity.this,
                     facesBitmap,
                     new ImagePreviewAdapter.ViewHolder.OnItemClickListener() {
                         @Override
                         public void onClick(View v, int position) {
-                            final SessionManager sessionManager = new SessionManager(FaceDetectGrayActivity.this);
                             imagePreviewAdapter.setCheck(position);
-                            DialogForm(position);
+                            //DialogForm(position);
                         }
                     }
             );
@@ -434,15 +436,20 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
         }
     }
 
+    @Override
+    public void onError(int error, Camera camera) {
+        Log.e(TAG, "Encountered an unexpected camera error: " + error);
+    }
+
     /**
      * Create Register Dialog
      */
     private void DialogForm(final int i) {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(FaceDetectGrayActivity.this);
+        AlertDialog.Builder dialog = new AlertDialog.Builder(FaceDetectActivity.this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_image_preview, null);
         final EditText nameEdit = dialogView.findViewById(R.id.name_edit);
-        final SessionManager sessionManager = new SessionManager(FaceDetectGrayActivity.this);
+        final SessionManager sessionManager = new SessionManager(FaceDetectActivity.this);
 
         dialog.setView(dialogView);
         dialog.setCancelable(true);
@@ -478,7 +485,52 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
         dialog.show();
     }
 
-    private void RecogFaces(String scanned) {
+    private void matchingFaces() {
+
+        // init fsdk
+        FSDK.ActivateLibrary(getString(R.string.license));
+        FSDK.Initialize();
+
+        // get face 1
+        FSDK.HImage face1 = new FSDK.HImage();
+        FSDK.LoadImageFromFile(face1, "/storage/emulated/0/FacexDemo/register.jpg");
+        FSDK.FSDK_FaceTemplate faceTemp1 = new FSDK.FSDK_FaceTemplate();
+        FSDK.TFacePosition facePosi1 = new FSDK.TFacePosition();
+        facePosi1.xc = 256;
+        facePosi1.yc = 256;
+        facePosi1.w = 512;
+        FSDK.GetFaceTemplateInRegion(face1, facePosi1, faceTemp1);
+
+        // get face 2
+        FSDK.HImage face2 = new FSDK.HImage();
+        FSDK.LoadImageFromFile(face2, "/storage/emulated/0/FacexDemo/recognize.jpg");
+        FSDK.FSDK_FaceTemplate faceTemp2 = new FSDK.FSDK_FaceTemplate();
+        FSDK.TFacePosition facePosi2 = new FSDK.TFacePosition();
+        facePosi2.xc = 256;
+        facePosi2.yc = 256;
+        facePosi2.w = 512;
+        FSDK.GetFaceTemplateInRegion(face2, facePosi2, faceTemp2);
+
+        // matching
+        float[] similarity = new float[1];
+        float[] threshold = new float[1];
+
+        FSDK.GetMatchingThresholdAtFAR(0.1f, threshold);
+        FSDK.MatchFaces(faceTemp1, faceTemp2, similarity);
+        if (similarity[0] > threshold[0]) {
+            Toast.makeText(getApplicationContext(), "Same: " + similarity[0], Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "Different: " + similarity[0], Toast.LENGTH_LONG).show();
+        }
+
+        // debug
+        Log.d("CCC", "threshold: " + threshold[0] + " " + "similarity: " + similarity[0]);
+    }
+
+    /**
+     * Request match faces
+     */
+    private void RecogFaces() {
         mApiService = ApiClient.getClient().create(BaseApiService.class);
 
         File file1 = new File("/storage/emulated/0/savedImages/face1.jpg");
@@ -489,7 +541,7 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
         RequestBody requestFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
         MultipartBody.Part body2 = MultipartBody.Part.createFormData("img_2", file2.getName(), requestFile2);
 
-        mApiService.matchFaces(getString(R.string.user_id), body1, body2)
+        mApiService.matchFaces("WangunBearerToken 1772170802", body1, body2)
                 .enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -541,11 +593,27 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
             int w = prevSettingWidth;
             int h = (int) (prevSettingWidth * aspect);
 
-            ByteBuffer bbuffer = ByteBuffer.wrap(data);
-            bbuffer.get(grayBuff, 0, bufflen);
+            // start Gray Photos
+            //ByteBuffer bbuffer = ByteBuffer.wrap(data);
+            //bbuffer.get(grayBuff, 0, bufflen);
+            //gray8toRGB32(grayBuff, previewWidth, previewHeight, rgbs);
+            // end Gray photos
 
-            gray8toRGB32(grayBuff, previewWidth, previewHeight, rgbs);
             Bitmap bitmap = Bitmap.createBitmap(rgbs, previewWidth, previewHeight, Bitmap.Config.RGB_565);
+
+            // start RGB Photos
+            YuvImage yuv = new YuvImage(data, ImageFormat.NV21,
+                    bitmap.getWidth(), bitmap.getHeight(), null);
+            Rect rectImage = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
+            ByteArrayOutputStream baout = new ByteArrayOutputStream();
+            if (!yuv.compressToJpeg(rectImage, 100, baout)) {
+                Log.e("CreateBitmap", "compressToJpeg failed");
+            }
+            BitmapFactory.Options bfo = new BitmapFactory.Options();
+            bfo.inPreferredConfig = Bitmap.Config.RGB_565;
+            bitmap = BitmapFactory.decodeStream(
+                    new ByteArrayInputStream(baout.toByteArray()), null, bfo);
+            // end RGB Photos
 
             if (w % 2 == 1) {
                 w -= 1;
@@ -612,9 +680,9 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
                             (int) (mid.y + eyesDis * 1.85f));
 
                     /**
-                     * Only detect face size > 100x100
+                     * Only detect face size > 20x20
                      */
-                    if (rect.height() * rect.width() > 16 * 16) {
+                    if (rect.height() * rect.width() > 20 * 20) {
                         // Check this face and previous face have same ID?
                         for (int j = 0; j < MAX_FACE; j++) {
                             float eyesDisPre = faces_previous[j].eyesDistance();
@@ -659,12 +727,22 @@ public final class FaceDetectGrayActivity extends AppCompatActivity implements S
                                     handler.post(new Runnable() {
                                         public void run() {
                                             if (imagePreviewAdapter.getItemCount() == 0) {
-
                                                 Bitmap resizedBitmap = Bitmap.createScaledBitmap(
-                                                        faceCroped, 128, 128, false);
-                                                ImgConverter.SaveImage(resizedBitmap, "face2");
+                                                        faceCroped, 512, 512, false);
+                                                String from = getIntent().getStringExtra("from");
+                                                BmpConverter.SaveImage(resizedBitmap, from);
                                                 imagePreviewAdapter.add(resizedBitmap);
-                                                RecogFaces(ImgConverter.convert(resizedBitmap));
+
+                                                Log.d("III", from);
+
+                                                if (from.equals("register")) {
+                                                    Toast.makeText(getApplicationContext(), "Muka berhasil didaftarkan", Toast.LENGTH_LONG).show();
+                                                    Intent myIntent = new Intent(FaceDetectActivity.this, MainActivity.class);
+                                                    startActivity(myIntent);
+                                                    finish();
+                                                } else {
+                                                    matchingFaces();
+                                                }
                                             }
                                         }
                                     });

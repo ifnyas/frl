@@ -13,15 +13,11 @@ import android.view.Surface;
 
 import java.util.List;
 
-/**
- * Created by Nguyen on 5/20/2016.
- */
-
-public class Util {
+public class DisplayUtils {
     // Orientation hysteresis amount used in rounding, in degrees
     private static final int ORIENTATION_HYSTERESIS = 5;
 
-    private static final String TAG = "Util";
+    private static final String TAG = "DisplayUtils";
 
     /**
      * Gets the current display rotation in angles.
