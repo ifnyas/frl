@@ -1,4 +1,4 @@
-package co.wangun.facexdemo
+package co.wangun.pnmfr
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry

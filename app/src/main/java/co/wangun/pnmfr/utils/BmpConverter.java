@@ -1,4 +1,4 @@
-package co.wangun.facexdemo.utils;
+package co.wangun.pnmfr.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +8,8 @@ import android.util.Base64;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+
+import co.wangun.pnmfr.R;
 
 public class BmpConverter {
 
@@ -31,7 +33,7 @@ public class BmpConverter {
     public static void SaveImage(Bitmap finalBitmap, String name) {
 
         String root = Environment.getExternalStorageDirectory().getAbsolutePath();
-        File myDir = new File(root + "/FacexDemo");
+        File myDir = new File(root + "/" + R.string.app_name);
         myDir.mkdirs();
 
         String fname = name + ".jpg";

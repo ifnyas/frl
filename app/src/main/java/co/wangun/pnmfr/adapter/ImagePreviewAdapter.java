@@ -1,4 +1,4 @@
-package co.wangun.facexdemo.adapter;
+package co.wangun.pnmfr.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -17,8 +17,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
-import co.wangun.facexdemo.R;
-import co.wangun.facexdemo.utils.BmpConverter;
+import co.wangun.pnmfr.R;
+import co.wangun.pnmfr.utils.BmpConverter;
 
 public class ImagePreviewAdapter extends
         RecyclerView.Adapter<RecyclerView.ViewHolder> {

@@ -7,7 +7,7 @@ android {
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        applicationId "co.wangun.facexdemo"
+        applicationId "co.wangun.pnmfr"
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 1

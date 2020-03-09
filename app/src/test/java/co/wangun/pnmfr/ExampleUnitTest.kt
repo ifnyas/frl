@@ -1,4 +1,4 @@
-package co.wangun.facexdemo
+package co.wangun.pnmfr
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

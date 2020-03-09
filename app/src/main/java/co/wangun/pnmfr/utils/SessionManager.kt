@@ -1,4 +1,4 @@
-package co.wangun.facexdemo.utils
+package co.wangun.pnmfr.utils
 
 import android.content.Context
 import org.json.JSONArray
@@ -29,6 +29,15 @@ class SessionManager(context: Context) {
         editor.apply()
     }
 
+    fun putLoc(
+        lat: String,
+        long: String
+    ) {
+        editor.putString("Lat", lat)
+        editor.putString("Long", long)
+        editor.apply()
+    }
+
     fun putUserDetail(
         mobiles: JSONArray,
         mobilesSize: Int
@@ -48,6 +57,23 @@ class SessionManager(context: Context) {
 
     fun getFace(): String? {
         return preferences.getString("Face", "No Face")
+    }
+
+    fun getLoc(loc: String): String? {
+        val lat = preferences.getString("Lat", "No Lat")
+        val long = preferences.getString("Long", "No Long")
+
+        return when (loc) {
+            "lat" -> {
+                lat
+            }
+            "long" -> {
+                long
+            }
+            else -> {
+                "Lat: $lat, Long: $long"
+            }
+        }
     }
 
     fun getMobile(i: Int): String? {

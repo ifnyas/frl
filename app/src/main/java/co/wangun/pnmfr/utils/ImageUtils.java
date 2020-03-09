@@ -1,4 +1,4 @@
-package co.wangun.facexdemo.utils;
+package co.wangun.pnmfr.utils;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -14,11 +14,7 @@ import android.provider.MediaStore;
 
 import java.io.IOException;
 
-import co.wangun.facexdemo.model.FaceResult;
-
-/**
- * Created by Nguyen on 5/20/2016.
- */
+import co.wangun.pnmfr.model.FaceResult;
 
 public class ImageUtils {
 
@@ -104,10 +100,8 @@ public class ImageUtils {
                     case ExifInterface.ORIENTATION_ROTATE_270:
                         bitmap = ImageUtils.rotate(bitmap, 270);
                         break;
-                    // etc.
                 }
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }

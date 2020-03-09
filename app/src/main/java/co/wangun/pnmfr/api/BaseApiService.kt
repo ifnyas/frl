@@ -1,4 +1,4 @@
-package co.wangun.facexdemo.api
+package co.wangun.pnmfr.api
 
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody

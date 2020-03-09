@@ -1,4 +1,4 @@
-package co.wangun.facexdemo;
+package co.wangun.pnmfr;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -44,15 +44,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import co.wangun.facexdemo.adapter.ImagePreviewAdapter;
-import co.wangun.facexdemo.api.ApiClient;
-import co.wangun.facexdemo.api.BaseApiService;
-import co.wangun.facexdemo.model.FaceResult;
-import co.wangun.facexdemo.utils.BmpConverter;
-import co.wangun.facexdemo.utils.DisplayUtils;
-import co.wangun.facexdemo.utils.FaceOverlayView;
-import co.wangun.facexdemo.utils.ImageUtils;
-import co.wangun.facexdemo.utils.SessionManager;
+import co.wangun.pnmfr.adapter.ImagePreviewAdapter;
+import co.wangun.pnmfr.api.ApiClient;
+import co.wangun.pnmfr.api.BaseApiService;
+import co.wangun.pnmfr.model.FaceResult;
+import co.wangun.pnmfr.utils.BmpConverter;
+import co.wangun.pnmfr.utils.DisplayUtils;
+import co.wangun.pnmfr.utils.FaceOverlayView;
+import co.wangun.pnmfr.utils.ImageUtils;
+import co.wangun.pnmfr.utils.SessionManager;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -71,21 +71,26 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
     //FaceDetectActivity
     public static final String TAG = FaceDetectActivity.class.getSimpleName();
     private static final int MAX_FACE = 10;
+
     // fps detect face (not FPS of camera)
     long start, end;
     int counter = 0;
     double fps;
+
     // Number of Cameras in device.
     private int numberOfCameras;
     private Camera mCamera;
     private int cameraId = 1;
+
     // Let's keep track of the display rotation and orientation also:
     private int mDisplayRotation;
     private int mDisplayOrientation;
     private int previewWidth;
     private int previewHeight;
+
     // The surface view for the camera data
     private SurfaceView mView;
+
     // Draw rectangles and other fancy stuff:
     private FaceOverlayView mFaceView;
     private boolean isThreadWorking = false;
@@ -101,25 +106,24 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
     private FaceResult[] faces_previous;
     private int Id = 0;
     private String BUNDLE_CAMERA_ID = "camera";
-    //RecylerView face image
+
     private HashMap<Integer, Integer> facesCount = new HashMap<>();
     private RecyclerView recyclerView;
 
-    //==============================================================================================
-    // Activity Methods
-    //==============================================================================================
     private ImagePreviewAdapter imagePreviewAdapter;
     private ArrayList<Bitmap> facesBitmap;
 
-    //yas
+    // yas
     private BaseApiService mApiService;
+    private SessionManager sessionManager;
 
-    /**
-     * Initializes the UI and initiates the creation of a face detector.
-     */
+    // onCreate
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+
+        //yas
+        sessionManager = new SessionManager(this);
 
         setContentView(R.layout.activity_camera_viewer);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -160,8 +164,7 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        // Check for the camera permission before accessing the camera.  If the
-        // permission is not granted yet, request permission.
+        // Check for the camera permission before accessing the camera
         SurfaceHolder holder = mView.getHolder();
         holder.addCallback(this);
     }
@@ -170,7 +173,6 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_camera, menu);
-
         return true;
     }
 
@@ -183,7 +185,6 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
                 return true;
 
             case R.id.switchCam:
-
                 if (numberOfCameras == 1) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle("Switch Camera").setMessage("Your device have one camera").setNeutralButton("Close", null);
@@ -191,12 +192,9 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
                     alert.show();
                     return true;
                 }
-
                 cameraId = (cameraId + 1) % numberOfCameras;
                 recreate();
-
                 return true;
-
 
             default:
                 return super.onOptionsItemSelected(item);
@@ -449,7 +447,6 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_image_preview, null);
         final EditText nameEdit = dialogView.findViewById(R.id.name_edit);
-        final SessionManager sessionManager = new SessionManager(FaceDetectActivity.this);
 
         dialog.setView(dialogView);
         dialog.setCancelable(true);
@@ -493,7 +490,7 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
 
         // get face 1
         FSDK.HImage face1 = new FSDK.HImage();
-        FSDK.LoadImageFromFile(face1, "/storage/emulated/0/FacexDemo/register.jpg");
+        FSDK.LoadImageFromFile(face1, "/storage/emulated/0/" + getString(R.string.app_name) + "/register.jpg");
         FSDK.FSDK_FaceTemplate faceTemp1 = new FSDK.FSDK_FaceTemplate();
         FSDK.TFacePosition facePosi1 = new FSDK.TFacePosition();
         facePosi1.xc = 256;
@@ -503,7 +500,7 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
 
         // get face 2
         FSDK.HImage face2 = new FSDK.HImage();
-        FSDK.LoadImageFromFile(face2, "/storage/emulated/0/FacexDemo/recognize.jpg");
+        FSDK.LoadImageFromFile(face2, "/storage/emulated/0/" + getString(R.string.app_name) + "/recognize.jpg");
         FSDK.FSDK_FaceTemplate faceTemp2 = new FSDK.FSDK_FaceTemplate();
         FSDK.TFacePosition facePosi2 = new FSDK.TFacePosition();
         facePosi2.xc = 256;
@@ -517,14 +514,19 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
 
         FSDK.GetMatchingThresholdAtFAR(0.1f, threshold);
         FSDK.MatchFaces(faceTemp1, faceTemp2, similarity);
+
         if (similarity[0] > threshold[0]) {
-            Toast.makeText(getApplicationContext(), "Same: " + similarity[0], Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(),
+                    "SAME PERSON with confidence: " + similarity[0] + "\n\n" + sessionManager.getLoc("full"),
+                    Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(getApplicationContext(), "Different: " + similarity[0], Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(),
+                    "DIFFERENT PERSON with confidence: " + similarity[0] + "\n\n" + sessionManager.getLoc("full"),
+                    Toast.LENGTH_LONG).show();
         }
 
         // debug
-        Log.d("CCC", "threshold: " + threshold[0] + " " + "similarity: " + similarity[0]);
+        Log.d("FDA", "threshold: " + threshold[0] + " " + "similarity: " + similarity[0]);
     }
 
     /**
@@ -718,9 +720,7 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
                             if (count <= 5)
                                 facesCount.put(idFace, count);
 
-                            //
                             // Crop Face to display in RecylerView
-                            //
                             if (count == 5) {
                                 faceCroped = ImageUtils.cropFace(faces[i], bitmap, rotate);
                                 if (faceCroped != null) {
@@ -732,8 +732,6 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
                                                 String from = getIntent().getStringExtra("from");
                                                 BmpConverter.SaveImage(resizedBitmap, from);
                                                 imagePreviewAdapter.add(resizedBitmap);
-
-                                                Log.d("III", from);
 
                                                 if (from.equals("register")) {
                                                     Toast.makeText(getApplicationContext(), "Muka berhasil didaftarkan", Toast.LENGTH_LONG).show();

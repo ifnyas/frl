@@ -1,7 +1,7 @@
 // Copyright (c) Philipp Wagner. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-package co.wangun.facexdemo.utils;
+package co.wangun.pnmfr.utils;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -13,7 +13,7 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 
-import co.wangun.facexdemo.model.FaceResult;
+import co.wangun.pnmfr.model.FaceResult;
 
 /**
  * This class is a simple View to display the faces.
@@ -36,14 +36,14 @@ public class FaceOverlayView extends View {
     }
 
     private void initialize() {
-        // We want a green box around the face:
+        // We want a white box around the face:
         DisplayMetrics metrics = getResources().getDisplayMetrics();
 
         int stroke = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, metrics);
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
-        mPaint.setColor(Color.BLACK);
+        mPaint.setColor(Color.WHITE);
         mPaint.setStrokeWidth(stroke);
         mPaint.setStyle(Paint.Style.STROKE);
 
@@ -112,16 +112,16 @@ public class FaceOverlayView extends View {
                         rectF.right = getWidth() - left;
                     }
                     canvas.drawRect(rectF, mPaint);
-//                    canvas.drawText("ID " + face.getId(), rectF.left, rectF.bottom + mTextPaint.getTextSize(), mTextPaint);
-//                    canvas.drawText("Confidence " + face.getConfidence(), rectF.left, rectF.bottom + mTextPaint.getTextSize() * 2, mTextPaint);
-//                    canvas.drawText("EyesDistance " + face.eyesDistance(), rectF.left, rectF.bottom + mTextPaint.getTextSize() * 3, mTextPaint);
+                    //canvas.drawText("ID " + face.getId(), rectF.left, rectF.bottom + mTextPaint.getTextSize(), mTextPaint);
+                    //canvas.drawText("Confidence " + face.getConfidence(), rectF.left, rectF.bottom + mTextPaint.getTextSize() * 2, mTextPaint);
+                    //canvas.drawText("EyesDistance " + face.eyesDistance(), rectF.left, rectF.bottom + mTextPaint.getTextSize() * 3, mTextPaint);
                 }
             }
             canvas.restore();
         }
 
-//        DecimalFormat df2 = new DecimalFormat(".##");
-//        canvas.drawText("Detected_Frame/s: " + df2.format(fps) + " @ " + previewWidth + "x" + previewHeight, mTextPaint.getTextSize(), mTextPaint.getTextSize(), mTextPaint);
+        //DecimalFormat df2 = new DecimalFormat(".##");
+        //canvas.drawText("Detected_Frame/s: " + df2.format(fps) + " @ " + previewWidth + "x" + previewHeight, mTextPaint.getTextSize(), mTextPaint.getTextSize(), mTextPaint);
     }
 
     public void setPreviewWidth(int previewWidth) {
