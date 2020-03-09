@@ -730,7 +730,7 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
                                                 Bitmap resizedBitmap = Bitmap.createScaledBitmap(
                                                         faceCroped, 512, 512, false);
                                                 String from = getIntent().getStringExtra("from");
-                                                BmpConverter.SaveImage(resizedBitmap, from);
+                                                BmpConverter.saveImage(resizedBitmap, from);
                                                 imagePreviewAdapter.add(resizedBitmap);
 
                                                 if (from.equals("register")) {
