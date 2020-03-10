@@ -35,18 +35,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.luxand.FSDK;
 
-import org.json.JSONObject;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import co.wangun.pnmfr.R;
 import co.wangun.pnmfr.adapter.ImagePreviewAdapter;
-import co.wangun.pnmfr.api.ApiClient;
 import co.wangun.pnmfr.api.BaseApiService;
 import co.wangun.pnmfr.model.FaceResult;
 import co.wangun.pnmfr.utils.BmpConverter;
@@ -54,13 +50,6 @@ import co.wangun.pnmfr.utils.DisplayUtils;
 import co.wangun.pnmfr.utils.FaceOverlayView;
 import co.wangun.pnmfr.utils.ImageUtils;
 import co.wangun.pnmfr.utils.SessionManager;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * FACE DETECT EVERY FRAME WIL CONVERT TO GRAY BITMAP SO THIS HAS HIGHER PERFORMANCE THAN RGB BITMAP
@@ -544,62 +533,23 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
         // matching
         float[] similarity = new float[1];
         float[] threshold = new float[1];
+        float farValue = 0.05f; // False Acceptance Rate 5%; the less the more accurate
 
-        FSDK.GetMatchingThresholdAtFAR(0.1f, threshold);
+        FSDK.GetMatchingThresholdAtFAR(farValue, threshold);
         FSDK.MatchFaces(faceTemp1, faceTemp2, similarity);
 
         if (similarity[0] > threshold[0]) {
-            Toast.makeText(getApplicationContext(),
-                    sessionManager.getName() + "\n\nSUCCESS with confidence: " + similarity[0] + "\n\n" + sessionManager.getLoc("full"),
-                    Toast.LENGTH_LONG).show();
+            sessionManager.putStatus(1);
+            startActivity(new Intent(FaceActivity.this, ResultActivity.class));
         } else {
-            Toast.makeText(getApplicationContext(),
-                    sessionManager.getName() + "\n\nFAILED with confidence: " + similarity[0] + "\n\n" + sessionManager.getLoc("full"),
-                    Toast.LENGTH_LONG).show();
+            sessionManager.putStatus(0);
+            startActivity(new Intent(FaceActivity.this, ResultActivity.class));
         }
+
+        finish();
 
         // debug
         Log.d("FA", "threshold: " + threshold[0] + " " + "similarity: " + similarity[0]);
-    }
-
-    /**
-     * Request match faces
-     */
-    private void RecogFaces() {
-        mApiService = ApiClient.getClient().create(BaseApiService.class);
-
-        File file1 = new File("/storage/emulated/0/savedImages/face1.jpg");
-        RequestBody requestFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
-        MultipartBody.Part body1 = MultipartBody.Part.createFormData("img_1", file1.getName(), requestFile1);
-
-        File file2 = new File("/storage/emulated/0/savedImages/face2.jpg");
-        RequestBody requestFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
-        MultipartBody.Part body2 = MultipartBody.Part.createFormData("img_2", file2.getName(), requestFile2);
-
-        mApiService.matchFaces("WangunBearerToken 1772170802", body1, body2)
-                .enqueue(new Callback<ResponseBody>() {
-                    @Override
-                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                        Log.d("RRR onResponse", "onResponse");
-                        if (response.isSuccessful()) {
-                            Log.d("RRR Response", "Response successful");
-                            try {
-                                JSONObject jsonRESULTS = new JSONObject(response.body().string());
-                                Log.d("RRR Code", jsonRESULTS.getString("status"));
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                Log.e("RRR Exception", e.toString());
-                            }
-                        } else {
-                            Log.e("RRR Rns", "Response not successful");
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<ResponseBody> call, Throwable t) {
-                        Log.e("RRR onFailure", t.toString());
-                    }
-                });
     }
 
     /**
@@ -730,8 +680,8 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
                                     (midPre.x + eyesDisPre * 1.5f),
                                     (midPre.y + eyesDisPre * 1.85f));
 
-                            if (rectCheck.contains(mid.x, mid.y) && (System.currentTimeMillis() - faces_previous[j].getTime()) < 1000) {
-                                idFace = faces_previous[j].getId();
+                            if (rectCheck.contains(mid.x, mid.y) && (System.currentTimeMillis() - faces_previous[j].time) < 1000) {
+                                idFace = faces_previous[j].id;
                                 break;
                             }
                         }
@@ -740,7 +690,7 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
 
                         faces[i].setFace(idFace, mid, eyesDis, confidence, pose, System.currentTimeMillis());
 
-                        faces_previous[i].set(faces[i].getId(), faces[i].getMidEye(), faces[i].eyesDistance(), faces[i].getConfidence(), faces[i].getPose(), faces[i].getTime());
+                        faces_previous[i].set(faces[i].id, faces[i].midEye, faces[i].eyesDistance(), faces[i].confidence, faces[i].pose, faces[i].time);
 
                         //
                         // if focus in a face 5 frame -> take picture face display in RecyclerView

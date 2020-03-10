@@ -11,10 +11,13 @@ import retrofit2.http.Part
 interface BaseApiService {
 
     @Multipart
-    @POST("api/match")
-    fun matchFaces(
+    @POST("api/result")
+    fun postResult(
         @Header("authorization") auth: String,
-        @Part img1: MultipartBody.Part,
-        @Part img2: MultipartBody.Part
+        @Part("username") username: String,
+        @Part("lat") lat: String,
+        @Part("lng") lng: String,
+        @Part("status") status: Int,
+        @Part img: MultipartBody.Part
     ): Call<ResponseBody>
 }

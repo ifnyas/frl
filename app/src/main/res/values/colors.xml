@@ -6,4 +6,5 @@
     <color name="colorPNMGreen">#31CF21</color>
     <color name="colorWhite">#FAFAFA</color>
     <color name="colorBlack">#212121</color>
+    <color name="colorRed">#f44336</color>
 </resources>

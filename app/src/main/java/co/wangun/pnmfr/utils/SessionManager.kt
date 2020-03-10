@@ -4,11 +4,10 @@ import android.content.Context
 
 class SessionManager(context: Context) {
 
-    private val preferences = context.getSharedPreferences("Preferences", 0)
-    private val editor = preferences.edit()
+    private val pref = context.getSharedPreferences("Preferences", 0)
+    private val editor = pref.edit()
 
-    //Init Session
-    //
+    // Put Session
     fun clearSession() {
         editor.clear()
         editor.apply()
@@ -28,63 +27,56 @@ class SessionManager(context: Context) {
         editor.apply()
     }
 
-    fun putLoc(
-        lat: String,
-        long: String
-    ) {
-        editor.putString("Lat", lat)
-        editor.putString("Long", long)
-        editor.apply()
-    }
-
     fun putPath(
         path: String
     ) {
         editor.putString("Path", path)
-    }
-
-    //Get Session
-    //
-
-    fun getPath(): String? {
-        return preferences.getString("Path", "No Path")
-    }
-
-    fun getName(): String? {
-        return preferences.getString("Name", "No Name")
-    }
-
-    fun getFace(): String? {
-        return preferences.getString("Face", "No Face")
-    }
-
-    fun getLoc(loc: String): String? {
-        val lat = preferences.getString("Lat", "No Lat")
-        val long = preferences.getString("Long", "No Long")
-
-        return when (loc) {
-            "lat" -> lat
-            "long" -> long
-            else -> "Lat: $lat, Long: $long"
-        }
-    }
-
-    /*
-
-    fun putUserDetail(
-        mobiles: JSONArray,
-        mobilesSize: Int
-    ) {
-        for (i in 0 until mobilesSize) {
-            val mobile = mobiles.getString(i)
-            editor.putString("Mobile$i", mobile)
-        }
         editor.apply()
     }
 
-    fun getMobile(i: Int): String? { return preferences.getString("Mobile$i", "No Mobile") }
+    fun putStatus(
+        status: Int
+    ) {
+        editor.putInt("Status", status)
+        editor.apply()
+    }
 
-    */
+    fun putLoc(
+        lat: String,
+        lng: String
+    ) {
+        editor.putString("Lat", lat)
+        editor.putString("Lng", lng)
+        editor.apply()
+    }
+
+    // Get Session
+    fun getPath(): String? {
+        return pref.getString("Path", "No Path")
+    }
+
+    fun getName(): String? {
+        return pref.getString("Name", "No Name")
+    }
+
+    fun getFace(): String? {
+        return pref.getString("Face", "No Face")
+    }
+
+    fun getStatus(): Int? {
+        return pref.getInt("Status", 0)
+    }
+
+    fun getLoc(loc: String): String? {
+        val lat = pref.getString("Lat", "No Lat")
+        val lng = pref.getString("Lng", "No Lng")
+
+        return when (loc) {
+            "lat" -> lat
+            "lng" -> lng
+            else -> "Lat: $lat, Lng: $lng"
+        }
+    }
 }
 
 

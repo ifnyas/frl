@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         val appDir = File(path)
         appDir.mkdirs()
         sessionManager?.putPath(path)
+        Log.d("RRR", sessionManager?.getPath().toString())
 
         // create .nomedia file
         val file = File(path, ".nomedia")
