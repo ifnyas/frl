@@ -18,6 +18,7 @@
         android:maxLines="1"
         android:text="Scanning..."
         android:textColor="#FAFAFA"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/imagePreview"
         app:layout_constraintTop_toTopOf="parent" />
@@ -27,7 +28,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_marginEnd="8dp"
-        android:visibility="invisible"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/nameText"
         app:layout_constraintTop_toTopOf="parent" />
@@ -60,7 +61,6 @@
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:src="@drawable/ic_check_white_24dp" />
-
     </RelativeLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,4 +1,4 @@
-package co.wangun.pnmfr
+package co.wangun.pnmfr.activity
 
 import android.Manifest
 import android.content.Intent
@@ -8,18 +8,23 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import co.wangun.pnmfr.R
 import co.wangun.pnmfr.utils.SessionManager
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.File
+import java.io.IOException
+
 
 class MainActivity : AppCompatActivity() {
 
-    private val request = 100
     private var locationManager: LocationManager? = null
     private var sessionManager: SessionManager? = null
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -42,6 +47,30 @@ class MainActivity : AppCompatActivity() {
 
         // request location updates
         reqLoc()
+
+        // create record folder and .nomedia
+        nomedia()
+    }
+
+    private fun nomedia() {
+
+        // create folder .record
+        val path = applicationInfo.dataDir + "/.rec"
+        val appDir = File(path)
+        appDir.mkdirs()
+        sessionManager?.putPath(path)
+
+        // create .nomedia file
+        val file = File(path, ".nomedia")
+        try {
+            file.createNewFile()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        // debug
+        Log.d("MainActivity", "${applicationInfo.dataDir}/.rec")
+        /*Environment.getExternalStorageDirectory().absolutePath + getString(R.string.app_name)*/
     }
 
     private fun reqLoc() {
@@ -93,24 +122,63 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initBtn() {
+
+        username.setOnClickListener {
+
+            val editText = EditText(this)
+            AlertDialog.Builder(this)
+                .setMessage("Masukkan Username")
+                .setView(editText)
+                .setPositiveButton("Simpan") { _, _ ->
+                    val name = editText.text.toString()
+                    if (name.isNotBlank()) {
+                        sessionManager?.putName(name)
+                    }
+                    Toast.makeText(
+                            this,
+                            "Username berhasil disimpan dengan nama '$name'", Toast.LENGTH_SHORT
+                        )
+                        .show()
+                }
+                .setNegativeButton("Batal") { _, _ -> }
+                .create()
+                .show()
+        }
+
         register.setOnClickListener {
-            val intent = Intent(this, FaceDetectActivity::class.java)
+
+            val intent = Intent(this, FaceActivity::class.java)
             intent.putExtra("from", "register")
             startActivity(intent)
         }
 
         recognize.setOnClickListener {
-            val intent = Intent(this, FaceDetectActivity::class.java)
+
+            val intent = Intent(this, FaceActivity::class.java)
             intent.putExtra("from", "recognize")
             startActivity(intent)
         }
 
         clear.setOnClickListener {
+
+            // remove local face
+            val file = File(sessionManager?.getPath(), "register.jpg")
+            if (file.exists()) {
+                file.delete()
+            }
+
+            // clear session
             sessionManager?.clearSession()
+            recreate()
+            Toast.makeText(
+                    this,
+                    "Foto dan username berhasil dihapus", Toast.LENGTH_SHORT
+                )
+                .show()
         }
     }
 
-    private fun requestPermission(request: Int) {
+    private fun requestPermission() {
 
         val permissions = arrayOf(
             Manifest.permission.CAMERA,
@@ -118,7 +186,7 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.ACCESS_FINE_LOCATION
         )
-        ActivityCompat.requestPermissions(this, permissions, request)
+        ActivityCompat.requestPermissions(this, permissions, 100)
     }
 
     override fun onRequestPermissionsResult(
@@ -127,7 +195,7 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED &&
-            requestCode == request
+            requestCode == 100
         ) {
             return
         } else {
@@ -136,6 +204,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkPermission() {
+
         val rc: Int = ActivityCompat.checkSelfPermission(
             this, Manifest.permission.CAMERA
         )
@@ -154,11 +223,12 @@ class MainActivity : AppCompatActivity() {
             rw == PackageManager.PERMISSION_DENIED ||
             rl == PackageManager.PERMISSION_DENIED
         ) {
-            requestPermission(request)
+            requestPermission()
         }
     }
 
     private val locationListener: LocationListener = object : LocationListener {
+
         override fun onLocationChanged(location: Location) {
             sessionManager?.putLoc(location.latitude.toString(), location.longitude.toString())
         }

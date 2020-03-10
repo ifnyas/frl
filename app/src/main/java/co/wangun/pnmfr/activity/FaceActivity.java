@@ -1,4 +1,4 @@
-package co.wangun.pnmfr;
+package co.wangun.pnmfr.activity;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -19,13 +19,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import co.wangun.pnmfr.R;
 import co.wangun.pnmfr.adapter.ImagePreviewAdapter;
 import co.wangun.pnmfr.api.ApiClient;
 import co.wangun.pnmfr.api.BaseApiService;
@@ -66,10 +67,10 @@ import retrofit2.Response;
  * COMPARE FPS (DETECT FRAME PER SECOND) OF 2 METHODs FOR MORE DETAIL
  */
 
-public final class FaceDetectActivity extends AppCompatActivity implements SurfaceHolder.Callback, Camera.PreviewCallback, Camera.ErrorCallback {
+public final class FaceActivity extends AppCompatActivity implements SurfaceHolder.Callback, Camera.PreviewCallback, Camera.ErrorCallback {
 
-    //FaceDetectActivity
-    public static final String TAG = FaceDetectActivity.class.getSimpleName();
+    //FaceActivity
+    public static final String TAG = FaceActivity.class.getSimpleName();
     private static final int MAX_FACE = 10;
 
     // fps detect face (not FPS of camera)
@@ -125,7 +126,7 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
         //yas
         sessionManager = new SessionManager(this);
 
-        setContentView(R.layout.activity_camera_viewer);
+        setContentView(R.layout.activity_face);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
@@ -152,13 +153,39 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
             faces_previous[i] = new FaceResult();
         }
 
-        getSupportActionBar().setDisplayShowTitleEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle("Scan");
-
         if (icicle != null)
             cameraId = icicle.getInt(BUNDLE_CAMERA_ID, 0);
+
+        // init btn
+        initBtn();
+    }
+
+    private void initBtn() {
+
+        ImageButton backBtn = findViewById(R.id.backBtn);
+        backBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                finish();
+            }
+        });
+
+        ImageButton camBtn = findViewById(R.id.camBtn);
+        camBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                if (numberOfCameras == 1) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(FaceActivity.this);
+                    builder.setTitle("Pilih Kamera")
+                            .setMessage("Device hanya punya satu kamera")
+                            .setNeutralButton("OK", null);
+                    AlertDialog alert = builder.create();
+                    alert.show();
+                }
+                cameraId = (cameraId + 1) % numberOfCameras;
+                recreate();
+            }
+        });
     }
 
     @Override
@@ -176,30 +203,29 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                super.onBackPressed();
-                return true;
-
-            case R.id.switchCam:
-                if (numberOfCameras == 1) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Switch Camera").setMessage("Your device have one camera").setNeutralButton("Close", null);
-                    AlertDialog alert = builder.create();
-                    alert.show();
-                    return true;
-                }
-                cameraId = (cameraId + 1) % numberOfCameras;
-                recreate();
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//
+//        switch (item.getItemId()) {
+//            case android.R.id.home:
+//
+//
+//            case R.id.switchCam:
+//                if (numberOfCameras == 1) {
+//                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//                    builder.setTitle("Switch Camera").setMessage("Your device have one camera").setNeutralButton("Close", null);
+//                    AlertDialog alert = builder.create();
+//                    alert.show();
+//                    return true;
+//                }
+//                cameraId = (cameraId + 1) % numberOfCameras;
+//                recreate();
+//                return true;
+//
+//            default:
+//                return super.onOptionsItemSelected(item);
+//        }
+//    }
 
     /**
      * Restarts the camera.
@@ -303,7 +329,7 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
 
     private void setDisplayOrientation() {
         // Now set the display orientation:
-        mDisplayRotation = DisplayUtils.getDisplayRotation(FaceDetectActivity.this);
+        mDisplayRotation = DisplayUtils.getDisplayRotation(FaceActivity.this);
         mDisplayOrientation = DisplayUtils.getDisplayOrientation(mDisplayRotation, cameraId);
 
         mCamera.setDisplayOrientation(mDisplayOrientation);
@@ -418,7 +444,7 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
         if (imagePreviewAdapter == null) {
             facesBitmap = new ArrayList<>();
             imagePreviewAdapter = new ImagePreviewAdapter(
-                    FaceDetectActivity.this,
+                    FaceActivity.this,
                     facesBitmap,
                     new ImagePreviewAdapter.ViewHolder.OnItemClickListener() {
                         @Override
@@ -443,7 +469,7 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
      * Create Register Dialog
      */
     private void DialogForm(final int i) {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(FaceDetectActivity.this);
+        AlertDialog.Builder dialog = new AlertDialog.Builder(FaceActivity.this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_image_preview, null);
         final EditText nameEdit = dialogView.findViewById(R.id.name_edit);
@@ -482,30 +508,37 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
         dialog.show();
     }
 
+    /**
+     * Matching faces
+     */
     private void matchingFaces() {
 
         // init fsdk
         FSDK.ActivateLibrary(getString(R.string.license));
         FSDK.Initialize();
 
+        // init variables
+        String path = sessionManager.getPath();
+        int w = getResources().getInteger(R.integer.width);
+
         // get face 1
         FSDK.HImage face1 = new FSDK.HImage();
-        FSDK.LoadImageFromFile(face1, "/storage/emulated/0/" + getString(R.string.app_name) + "/register.jpg");
+        FSDK.LoadImageFromFile(face1, path + "/register.jpg");
         FSDK.FSDK_FaceTemplate faceTemp1 = new FSDK.FSDK_FaceTemplate();
         FSDK.TFacePosition facePosi1 = new FSDK.TFacePosition();
-        facePosi1.xc = 256;
-        facePosi1.yc = 256;
-        facePosi1.w = 512;
+        facePosi1.w = w;
+        facePosi1.xc = w / 2;
+        facePosi1.yc = w / 2;
         FSDK.GetFaceTemplateInRegion(face1, facePosi1, faceTemp1);
 
         // get face 2
         FSDK.HImage face2 = new FSDK.HImage();
-        FSDK.LoadImageFromFile(face2, "/storage/emulated/0/" + getString(R.string.app_name) + "/recognize.jpg");
+        FSDK.LoadImageFromFile(face2, path + "/recognize.jpg");
         FSDK.FSDK_FaceTemplate faceTemp2 = new FSDK.FSDK_FaceTemplate();
         FSDK.TFacePosition facePosi2 = new FSDK.TFacePosition();
-        facePosi2.xc = 256;
-        facePosi2.yc = 256;
-        facePosi2.w = 512;
+        facePosi2.w = w;
+        facePosi2.xc = w / 2;
+        facePosi2.yc = w / 2;
         FSDK.GetFaceTemplateInRegion(face2, facePosi2, faceTemp2);
 
         // matching
@@ -517,16 +550,16 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
 
         if (similarity[0] > threshold[0]) {
             Toast.makeText(getApplicationContext(),
-                    "SAME PERSON with confidence: " + similarity[0] + "\n\n" + sessionManager.getLoc("full"),
+                    sessionManager.getName() + "\n\nSUCCESS with confidence: " + similarity[0] + "\n\n" + sessionManager.getLoc("full"),
                     Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(getApplicationContext(),
-                    "DIFFERENT PERSON with confidence: " + similarity[0] + "\n\n" + sessionManager.getLoc("full"),
+                    sessionManager.getName() + "\n\nFAILED with confidence: " + similarity[0] + "\n\n" + sessionManager.getLoc("full"),
                     Toast.LENGTH_LONG).show();
         }
 
         // debug
-        Log.d("FDA", "threshold: " + threshold[0] + " " + "similarity: " + similarity[0]);
+        Log.d("FA", "threshold: " + threshold[0] + " " + "similarity: " + similarity[0]);
     }
 
     /**
@@ -727,15 +760,16 @@ public final class FaceDetectActivity extends AppCompatActivity implements Surfa
                                     handler.post(new Runnable() {
                                         public void run() {
                                             if (imagePreviewAdapter.getItemCount() == 0) {
+                                                int w = getResources().getInteger(R.integer.width);
                                                 Bitmap resizedBitmap = Bitmap.createScaledBitmap(
-                                                        faceCroped, 512, 512, false);
+                                                        faceCroped, w, w, false);
                                                 String from = getIntent().getStringExtra("from");
-                                                BmpConverter.saveImage(resizedBitmap, from);
+                                                BmpConverter.saveImage(resizedBitmap, from, FaceActivity.this);
                                                 imagePreviewAdapter.add(resizedBitmap);
 
                                                 if (from.equals("register")) {
                                                     Toast.makeText(getApplicationContext(), "Muka berhasil didaftarkan", Toast.LENGTH_LONG).show();
-                                                    Intent myIntent = new Intent(FaceDetectActivity.this, MainActivity.class);
+                                                    Intent myIntent = new Intent(FaceActivity.this, MainActivity.class);
                                                     startActivity(myIntent);
                                                     finish();
                                                 } else {

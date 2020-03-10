@@ -1,15 +1,15 @@
 package co.wangun.pnmfr.utils
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Environment
 import android.util.Base64
-import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
 object BmpConverter {
+
     @Throws(IllegalArgumentException::class)
     fun convert(base64Str: String): Bitmap {
         val decodedBytes = Base64.decode(
@@ -30,11 +30,13 @@ object BmpConverter {
     }
 
     @JvmStatic
-    fun saveImage(finalBitmap: Bitmap, name: String) {
-        val root = Environment.getExternalStorageDirectory().absolutePath
-        val myDir = File(root + "/PNMFR")
-        Log.d("AAA", root)
+    fun saveImage(finalBitmap: Bitmap, name: String, context: Context) {
+
+        val sessionManager = SessionManager(context)
+        val path = sessionManager.getPath()
+        val myDir = File(path!!)
         myDir.mkdirs()
+
         val fileName = "$name.jpg"
         val file = File(myDir, fileName)
         if (file.exists()) file.delete()

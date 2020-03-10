@@ -20,18 +20,17 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         android:vmSafeMode="true">
-
-        <activity android:name="co.wangun.pnmfr.MainActivity">
+        <activity android:name=".activity.ResultActivity"></activity>
+        <activity android:name=".activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name="co.wangun.pnmfr.FaceDetectActivity"
+            android:name=".activity.FaceActivity"
             android:screenOrientation="fullSensor" />
-
     </application>
 
 </manifest>

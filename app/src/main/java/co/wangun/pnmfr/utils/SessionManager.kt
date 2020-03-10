@@ -1,7 +1,6 @@
 package co.wangun.pnmfr.utils
 
 import android.content.Context
-import org.json.JSONArray
 
 class SessionManager(context: Context) {
 
@@ -38,19 +37,19 @@ class SessionManager(context: Context) {
         editor.apply()
     }
 
-    fun putUserDetail(
-        mobiles: JSONArray,
-        mobilesSize: Int
+    fun putPath(
+        path: String
     ) {
-        for (i in 0 until mobilesSize) {
-            val mobile = mobiles.getString(i)
-            editor.putString("Mobile$i", mobile)
-        }
-        editor.apply()
+        editor.putString("Path", path)
     }
 
     //Get Session
     //
+
+    fun getPath(): String? {
+        return preferences.getString("Path", "No Path")
+    }
+
     fun getName(): String? {
         return preferences.getString("Name", "No Name")
     }
@@ -64,21 +63,28 @@ class SessionManager(context: Context) {
         val long = preferences.getString("Long", "No Long")
 
         return when (loc) {
-            "lat" -> {
-                lat
-            }
-            "long" -> {
-                long
-            }
-            else -> {
-                "Lat: $lat, Long: $long"
-            }
+            "lat" -> lat
+            "long" -> long
+            else -> "Lat: $lat, Long: $long"
         }
     }
 
-    fun getMobile(i: Int): String? {
-        return preferences.getString("Mobile$i", "No Mobile")
+    /*
+
+    fun putUserDetail(
+        mobiles: JSONArray,
+        mobilesSize: Int
+    ) {
+        for (i in 0 until mobilesSize) {
+            val mobile = mobiles.getString(i)
+            editor.putString("Mobile$i", mobile)
+        }
+        editor.apply()
     }
+
+    fun getMobile(i: Int): String? { return preferences.getString("Mobile$i", "No Mobile") }
+
+    */
 }
 
 
