@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import co.wangun.pnmfr.R;
-import co.wangun.pnmfr.adapter.ImagePreviewAdapter;
 import co.wangun.pnmfr.api.BaseApiService;
 import co.wangun.pnmfr.model.FaceResult;
 import co.wangun.pnmfr.utils.BmpConverter;
@@ -100,7 +99,6 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
     private HashMap<Integer, Integer> facesCount = new HashMap<>();
     private RecyclerView recyclerView;
 
-    private ImagePreviewAdapter imagePreviewAdapter;
     private ArrayList<Bitmap> facesBitmap;
 
     // yas
@@ -246,7 +244,6 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        resetData();
     }
 
     @Override
@@ -257,8 +254,6 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        //Find the total number of cameras available
-        resetData();
 
         numberOfCameras = Camera.getNumberOfCameras();
         Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
@@ -426,29 +421,6 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
 
     }
 
-    /**
-     * Release Memory
-     */
-    private void resetData() {
-        if (imagePreviewAdapter == null) {
-            facesBitmap = new ArrayList<>();
-            imagePreviewAdapter = new ImagePreviewAdapter(
-                    FaceActivity.this,
-                    facesBitmap,
-                    new ImagePreviewAdapter.ViewHolder.OnItemClickListener() {
-                        @Override
-                        public void onClick(View v, int position) {
-                            imagePreviewAdapter.setCheck(position);
-                            //DialogForm(position);
-                        }
-                    }
-            );
-            recyclerView.setAdapter(imagePreviewAdapter);
-        } else {
-            imagePreviewAdapter.clearAll();
-        }
-    }
-
     @Override
     public void onError(int error, Camera camera) {
         Log.e(TAG, "Encountered an unexpected camera error: " + error);
@@ -473,15 +445,12 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
             public void onClick(DialogInterface dialog, int which) {
 
                 String name = nameEdit.getText().toString();
-                imagePreviewAdapter.setName(name);
 
                 sessionManager.putName(name);
-                sessionManager.putFace(imagePreviewAdapter.setBmp(i));
 
                 Log.d("AAA Name", sessionManager.getName());
                 Log.d("AAA Face", sessionManager.getFace());
 
-                imagePreviewAdapter.notifyDataSetChanged();
                 dialog.dismiss();
             }
         });
@@ -558,11 +527,9 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
     private class FaceDetectThread extends Thread {
         private Handler handler;
         private byte[] data = null;
-        private Context ctx;
         private Bitmap faceCroped;
 
         public FaceDetectThread(Handler handler, Context ctx) {
-            this.ctx = ctx;
             this.handler = handler;
         }
 
@@ -664,9 +631,7 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
                             (int) (mid.x + eyesDis * 1.20f),
                             (int) (mid.y + eyesDis * 1.85f));
 
-                    /**
-                     * Only detect face size > 20x20
-                     */
+                    // Only detect face size > 20x20
                     if (rect.height() * rect.width() > 20 * 20) {
                         // Check this face and previous face have same ID?
                         for (int j = 0; j < MAX_FACE; j++) {
@@ -705,26 +670,28 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
 
                             // Crop Face to display in RecylerView
                             if (count == 5) {
-                                faceCroped = ImageUtils.cropFace(faces[i], bitmap, rotate);
-                                if (faceCroped != null) {
-                                    handler.post(new Runnable() {
-                                        public void run() {
-                                            if (imagePreviewAdapter.getItemCount() == 0) {
-                                                int w = getResources().getInteger(R.integer.width);
-                                                Bitmap resizedBitmap = Bitmap.createScaledBitmap(
-                                                        faceCroped, w, w, false);
-                                                String from = getIntent().getStringExtra("from");
-                                                BmpConverter.saveImage(resizedBitmap, from, FaceActivity.this);
-                                                imagePreviewAdapter.add(resizedBitmap);
 
-                                                if (from.equals("register")) {
-                                                    Toast.makeText(getApplicationContext(), "Muka berhasil didaftarkan", Toast.LENGTH_LONG).show();
-                                                    Intent myIntent = new Intent(FaceActivity.this, MainActivity.class);
-                                                    startActivity(myIntent);
-                                                    finish();
-                                                } else {
-                                                    matchingFaces();
-                                                }
+                                faceCroped = ImageUtils.cropFace(faces[i], bitmap, rotate);
+
+                                if (faceCroped != null) {
+
+                                    handler.post(new Runnable() {
+
+                                        public void run() {
+
+                                            int w = getResources().getInteger(R.integer.width);
+                                            Bitmap resizedBitmap = Bitmap.createScaledBitmap(
+                                                    faceCroped, w, w, false);
+                                            String from = getIntent().getStringExtra("from");
+                                            BmpConverter.saveImage(resizedBitmap, from, FaceActivity.this);
+
+                                            if (from.equals("register")) {
+                                                Toast.makeText(getApplicationContext(), "Muka berhasil didaftarkan", Toast.LENGTH_LONG).show();
+                                                Intent myIntent = new Intent(FaceActivity.this, MainActivity.class);
+                                                startActivity(myIntent);
+                                                finish();
+                                            } else {
+                                                matchingFaces();
                                             }
                                         }
                                     });
