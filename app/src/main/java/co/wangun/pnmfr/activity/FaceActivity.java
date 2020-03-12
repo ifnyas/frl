@@ -2,7 +2,6 @@ package co.wangun.pnmfr.activity;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,33 +15,24 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.luxand.FSDK;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import co.wangun.pnmfr.R;
-import co.wangun.pnmfr.api.BaseApiService;
 import co.wangun.pnmfr.model.FaceResult;
 import co.wangun.pnmfr.utils.BmpConverter;
 import co.wangun.pnmfr.utils.DisplayUtils;
@@ -97,12 +87,7 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
     private String BUNDLE_CAMERA_ID = "camera";
 
     private HashMap<Integer, Integer> facesCount = new HashMap<>();
-    private RecyclerView recyclerView;
 
-    private ArrayList<Bitmap> facesBitmap;
-
-    // yas
-    private BaseApiService mApiService;
     private SessionManager sessionManager;
 
     // onCreate
@@ -126,11 +111,6 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
         ));
-
-        recyclerView = findViewById(R.id.recycler_view);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
-        recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
 
         handler = new Handler();
         faces = new FaceResult[MAX_FACE];
@@ -182,37 +162,6 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
         SurfaceHolder holder = mView.getHolder();
         holder.addCallback(this);
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_camera, menu);
-        return true;
-    }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//
-//        switch (item.getItemId()) {
-//            case android.R.id.home:
-//
-//
-//            case R.id.switchCam:
-//                if (numberOfCameras == 1) {
-//                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//                    builder.setTitle("Switch Camera").setMessage("Your device have one camera").setNeutralButton("Close", null);
-//                    AlertDialog alert = builder.create();
-//                    alert.show();
-//                    return true;
-//                }
-//                cameraId = (cameraId + 1) % numberOfCameras;
-//                recreate();
-//                return true;
-//
-//            default:
-//                return super.onOptionsItemSelected(item);
-//        }
-//    }
 
     /**
      * Restarts the camera.
@@ -427,46 +376,6 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
     }
 
     /**
-     * Create Register Dialog
-     */
-    private void DialogForm(final int i) {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(FaceActivity.this);
-        LayoutInflater inflater = getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_image_preview, null);
-        final EditText nameEdit = dialogView.findViewById(R.id.name_edit);
-
-        dialog.setView(dialogView);
-        dialog.setCancelable(true);
-        dialog.setTitle("Register");
-
-        dialog.setPositiveButton("SUBMIT", new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-                String name = nameEdit.getText().toString();
-
-                sessionManager.putName(name);
-
-                Log.d("AAA Name", sessionManager.getName());
-                Log.d("AAA Face", sessionManager.getFace());
-
-                dialog.dismiss();
-            }
-        });
-
-        dialog.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-
-        dialog.show();
-    }
-
-    /**
      * Matching faces
      */
     private void matchingFaces() {
@@ -657,10 +566,8 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
 
                         faces_previous[i].set(faces[i].id, faces[i].midEye, faces[i].eyesDistance(), faces[i].confidence, faces[i].pose, faces[i].time);
 
-                        //
-                        // if focus in a face 5 frame -> take picture face display in RecyclerView
+                        // if focus in a face 5 frame -> take picture face display
                         // because of some first frame have low quality
-                        //
                         if (facesCount.get(idFace) == null) {
                             facesCount.put(idFace, 0);
                         } else {

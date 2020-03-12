@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import co.wangun.pnmfr.R
 import co.wangun.pnmfr.api.ApiClient.client
-import co.wangun.pnmfr.api.BaseApiService
+import co.wangun.pnmfr.api.ApiService
 import co.wangun.pnmfr.utils.SessionManager
 import kotlinx.android.synthetic.main.activity_result.*
 import okhttp3.MediaType
@@ -69,7 +69,7 @@ class ResultActivity : AppCompatActivity() {
     private fun sendResult() {
 
         // init API Service
-        val mApiService = client.create(BaseApiService::class.java)
+        val mApiService = client.create(ApiService::class.java)
 
         // init values
         val auth = getString(R.string.auth)

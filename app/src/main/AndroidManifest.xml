@@ -20,7 +20,6 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         android:vmSafeMode="true">
-        <activity android:name=".activity.ResultActivity"></activity>
         <activity android:name=".activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,6 +30,7 @@
         <activity
             android:name=".activity.FaceActivity"
             android:screenOrientation="fullSensor" />
+        <activity android:name=".activity.ResultActivity" />
     </application>
 
 </manifest>
