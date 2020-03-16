@@ -50,6 +50,9 @@ class MainActivity : AppCompatActivity() {
 
         // create record folder and .nomedia
         nomedia()
+
+        // debug - set username to PNMUser1
+        sessionManager?.putName(getString(R.string.user))
     }
 
     private fun nomedia() {
@@ -70,7 +73,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // debug
-        Log.d("MainActivity", "${applicationInfo.dataDir}/.rec")
+        Log.d("MainActivity", path)
         /*Environment.getExternalStorageDirectory().absolutePath + getString(R.string.app_name)*/
     }
 
@@ -155,9 +158,32 @@ class MainActivity : AppCompatActivity() {
 
         recognize.setOnClickListener {
 
+            // init intent
             val intent = Intent(this, FaceActivity::class.java)
-            intent.putExtra("from", "recognize")
-            startActivity(intent)
+
+            // check if there is a face in local storage
+            val file = File(sessionManager?.getPath(), "register.jpg")
+
+            // put code here to check if there is any registered face for user in server
+
+            // set recognize or register for the next activity
+            if (file.exists()) {
+                intent.putExtra("from", "recognize")
+            } else {
+                intent.putExtra("from", "register")
+            }
+
+            // start intent if gps ready
+            if (sessionManager?.getLoc("lat") == "No Lat") {
+                Toast.makeText(
+                        this,
+                        "GPS masih dalam proses mencari koordinat...",
+                        Toast.LENGTH_LONG
+                    )
+                    .show()
+            } else {
+                startActivity(intent)
+            }
         }
 
         clear.setOnClickListener {
@@ -173,7 +199,8 @@ class MainActivity : AppCompatActivity() {
             recreate()
             Toast.makeText(
                     this,
-                    "Foto dan username berhasil dihapus", Toast.LENGTH_SHORT
+                    "Foto dan username berhasil dihapus",
+                    Toast.LENGTH_SHORT
                 )
                 .show()
         }

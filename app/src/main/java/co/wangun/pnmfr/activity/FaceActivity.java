@@ -2,6 +2,7 @@ package co.wangun.pnmfr.activity;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -21,7 +22,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageButton;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -125,6 +125,25 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
 
         // init btn
         initBtn();
+
+        // show dialog if user doesn't have a registered face
+        String from = getIntent().getStringExtra("from");
+        if (from.equals("register")) {
+            AlertDialog.Builder dialog = new AlertDialog.Builder(FaceActivity.this);
+            dialog.setMessage("Wajah kamu belum pernah terdaftar sebelumnya")
+                    .setPositiveButton("Daftar", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton("Lain Kali", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .create()
+                    .show();
+        }
     }
 
     private void initBtn() {
@@ -145,9 +164,9 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
                     AlertDialog.Builder builder = new AlertDialog.Builder(FaceActivity.this);
                     builder.setTitle("Pilih Kamera")
                             .setMessage("Device hanya punya satu kamera")
-                            .setNeutralButton("OK", null);
-                    AlertDialog alert = builder.create();
-                    alert.show();
+                            .setNeutralButton("OK", null)
+                            .create()
+                            .show();
                 }
                 cameraId = (cameraId + 1) % numberOfCameras;
                 recreate();
@@ -411,7 +430,7 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
         // matching
         float[] similarity = new float[1];
         float[] threshold = new float[1];
-        float farValue = 0.05f; // False Acceptance Rate 5%; the less the more accurate
+        float farValue = 0.05f; // False Acceptance Rate 5%; the less the more secure
 
         FSDK.GetMatchingThresholdAtFAR(farValue, threshold);
         FSDK.MatchFaces(faceTemp1, faceTemp2, similarity);
@@ -593,10 +612,19 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
                                             BmpConverter.saveImage(resizedBitmap, from, FaceActivity.this);
 
                                             if (from.equals("register")) {
-                                                Toast.makeText(getApplicationContext(), "Muka berhasil didaftarkan", Toast.LENGTH_LONG).show();
-                                                Intent myIntent = new Intent(FaceActivity.this, MainActivity.class);
-                                                startActivity(myIntent);
-                                                finish();
+                                                AlertDialog.Builder builder = new AlertDialog.Builder(FaceActivity.this);
+                                                builder.setMessage("Wajah kamu sudah terdaftar. Sekarang kamu bisa presensi melalui fitur wajah.")
+                                                        .setNeutralButton("OK", new DialogInterface.OnClickListener() {
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                Intent intent = new Intent(FaceActivity.this, FaceActivity.class);
+                                                                intent.putExtra("from", "recognize");
+                                                                startActivity(intent);
+                                                                finish();
+                                                            }
+                                                        })
+                                                        .create()
+                                                        .show();
+                                                //Toast.makeText(getApplicationContext(), "Muka berhasil didaftarkan", Toast.LENGTH_LONG).show();
                                             } else {
                                                 matchingFaces();
                                             }

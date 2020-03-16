@@ -5,11 +5,20 @@
     android:gravity="center"
     android:orientation="vertical">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:gravity="center"
+        android:text="User logged in:\npnmuser1"
+        android:textColor="@color/colorBlack" />
+
     <Button
         android:id="@+id/username"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:visibility="gone"
         android:text="1 Username" />
 
     <Button
@@ -17,6 +26,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
+        android:visibility="gone"
         android:text="2 Daftar" />
 
     <Button
@@ -24,12 +34,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="3 Login" />
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:text="Login" />
 
     <Button
         android:id="@+id/clear"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="4 Logout" />
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:text="Logout"
+        android:textColor="@color/colorAccent" />
 </LinearLayout>
