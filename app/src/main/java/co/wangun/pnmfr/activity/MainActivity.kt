@@ -209,7 +209,7 @@ class MainActivity : AppCompatActivity() {
             recreate()
             Toast.makeText(
                     this,
-                    "Foto dan username berhasil dihapus",
+                    "Data berhasil di-reset",
                     Toast.LENGTH_SHORT
                 )
                 .show()
