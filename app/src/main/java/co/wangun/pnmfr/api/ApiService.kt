@@ -17,6 +17,7 @@ interface ApiService {
         @Part("username") username: String,
         @Part("lat") lat: String,
         @Part("lng") lng: String,
+        @Part("confidence") confidence: String,
         @Part("status") status: Int,
         @Part img: MultipartBody.Part
     ): Call<ResponseBody>

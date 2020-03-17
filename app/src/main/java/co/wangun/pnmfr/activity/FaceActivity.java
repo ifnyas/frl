@@ -448,6 +448,7 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
             startActivity(new Intent(FaceActivity.this, ResultActivity.class));
         }
 
+        sessionManager.putConfidence(Float.toString(similarity[0]));
         finish();
 
         // debug

@@ -78,6 +78,7 @@ class ResultActivity : AppCompatActivity() {
         val lng = sessionManager?.getLoc("lng")
         val status = sessionManager?.getStatus()
         val path = sessionManager?.getPath()
+        val confidence = sessionManager?.getConfidence()
         val file = File(path, "recognize.jpg")
         val requestFile =
             RequestBody.create(MediaType.parse("multipart/form-data"), file)
@@ -85,7 +86,7 @@ class ResultActivity : AppCompatActivity() {
             MultipartBody.Part.createFormData("img", file.name, requestFile)
 
         // post request
-        mApiService.postResult(auth, username!!, lat!!, lng!!, status!!, img)
+        mApiService.postResult(auth, username!!, lat!!, lng!!, confidence!!, status!!, img)
             .enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
@@ -106,8 +107,6 @@ class ResultActivity : AppCompatActivity() {
                         } catch (e: IOException) {
                             e.printStackTrace()
                         }
-                    } else {
-                        //response not successful
                     }
                 }
 

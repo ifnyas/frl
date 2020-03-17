@@ -34,6 +34,13 @@ class SessionManager(context: Context) {
         editor.apply()
     }
 
+    fun putConfidence(
+        confidence: String
+    ) {
+        editor.putString("Confidence", confidence)
+        editor.apply()
+    }
+
     fun putStatus(
         status: Int
     ) {
@@ -63,9 +70,14 @@ class SessionManager(context: Context) {
         return pref.getString("Face", "No Face")
     }
 
+    fun getConfidence(): String? {
+        return pref.getString("Confidence", "No Confidence")
+    }
+
     fun getStatus(): Int? {
         return pref.getInt("Status", 0)
     }
+
 
     fun getLoc(loc: String): String? {
         val lat = pref.getString("Lat", "No Lat")
