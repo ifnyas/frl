@@ -158,6 +158,9 @@ class MainActivity : AppCompatActivity() {
 
         recognize.setOnClickListener {
 
+            // update loc
+            reqLoc()
+
             // init intent
             val intent = Intent(this, FaceActivity::class.java)
 
@@ -165,13 +168,6 @@ class MainActivity : AppCompatActivity() {
             val file = File(sessionManager?.getPath(), "register.jpg")
 
             // put code here to check if there is any registered face for user in server
-
-            // set recognize or register for the next activity
-            if (file.exists()) {
-                intent.putExtra("from", "recognize")
-            } else {
-                intent.putExtra("from", "register")
-            }
 
             // start intent if gps ready
             if (sessionManager?.getLoc("lat") == "No Lat") {
@@ -181,8 +177,22 @@ class MainActivity : AppCompatActivity() {
                         Toast.LENGTH_LONG
                     )
                     .show()
+                Log.d("MA", sessionManager?.getLoc("full").toString())
             } else {
-                startActivity(intent)
+                // set recognize or register for the next activity
+                if (file.exists()) {
+                    intent.putExtra("from", "recognize")
+                    startActivity(intent)
+                } else {
+                    AlertDialog.Builder(this)
+                        .setMessage("Wajah kamu belum pernah terdaftar sebelumnya")
+                        .setPositiveButton("Daftar") { _, _ ->
+                            intent.putExtra("from", "register")
+                            startActivity(intent)
+                        }
+                        .setNegativeButton("Lain Kali") { _, _ -> }
+                        .create().show()
+                }
             }
         }
 

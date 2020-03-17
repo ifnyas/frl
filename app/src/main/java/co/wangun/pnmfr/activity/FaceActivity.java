@@ -127,13 +127,17 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
         initBtn();
 
         // show dialog if user doesn't have a registered face
+        /*
         String from = getIntent().getStringExtra("from");
         if (from.equals("register")) {
             AlertDialog.Builder dialog = new AlertDialog.Builder(FaceActivity.this);
             dialog.setMessage("Wajah kamu belum pernah terdaftar sebelumnya")
                     .setPositiveButton("Daftar", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
+                            Intent intent = new Intent(FaceActivity.this, FaceActivity.class);
+                            intent.putExtra("from", "register");
+                            startActivity(intent);
+                            finish();
                         }
                     })
                     .setNegativeButton("Lain Kali", new DialogInterface.OnClickListener() {
@@ -143,7 +147,8 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
                     })
                     .create()
                     .show();
-        }
+
+         */
     }
 
     private void initBtn() {
