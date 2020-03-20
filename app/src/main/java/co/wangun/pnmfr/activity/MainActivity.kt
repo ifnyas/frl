@@ -9,22 +9,34 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import co.wangun.pnmfr.R
+import co.wangun.pnmfr.api.ApiClient
+import co.wangun.pnmfr.api.ApiService
+import co.wangun.pnmfr.utils.BmpConverter
 import co.wangun.pnmfr.utils.SessionManager
 import kotlinx.android.synthetic.main.activity_main.*
+import okhttp3.ResponseBody
+import org.json.JSONException
+import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.File
 import java.io.IOException
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
 
     private var locationManager: LocationManager? = null
     private var sessionManager: SessionManager? = null
+    private var apiService: ApiService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -51,8 +63,85 @@ class MainActivity : AppCompatActivity() {
         // create record folder and .nomedia
         nomedia()
 
-        // debug - set username to PNMUser1
-        sessionManager?.putName(getString(R.string.user))
+        // init view
+        initView()
+    }
+
+    private fun initView() {
+        // set username view
+        val name = sessionManager?.getName()
+        if (name == "No Name") {
+            loggedin.text = "Masukkan username terlebih dahulu"
+            recognize.visibility = View.GONE
+        } else {
+            loggedin.text = "Logged in as\n$name"
+            recognize.visibility = View.VISIBLE
+        }
+
+        // set update visibility
+        val file = File(sessionManager?.getPath(), "register.jpg")
+        if (file.exists()) {
+            update.visibility = View.VISIBLE
+        } else {
+            update.visibility = View.GONE
+        }
+    }
+
+    private fun checkFace() {
+
+        // init API Service
+        apiService = ApiClient.client.create(ApiService::class.java)
+
+        // init values
+        val auth = getString(R.string.auth)
+        val username = sessionManager?.getName()
+
+        // post request
+        apiService?.getUser(auth, username!!)
+            ?.enqueue(object : Callback<ResponseBody> {
+                override fun onResponse(
+                    call: Call<ResponseBody>,
+                    response: Response<ResponseBody>
+                ) {
+                    if (response.isSuccessful) {
+
+                        try {
+                            val jsonRESULTS = JSONObject(response.body()!!.string())
+                            val jsonMESSAGE = jsonRESULTS.getString("message")
+
+                            if (jsonMESSAGE == "Data fetched successfully") {
+                                val jsonRECORDS = jsonRESULTS.getJSONObject("records")
+                                val jsonIMG = jsonRECORDS.getString("img_url")
+                                BmpConverter.downloadImage(jsonIMG, applicationContext)
+
+                                Toast.makeText(
+                                    applicationContext,
+                                    "DB muka berhasil di-download",
+                                    Toast.LENGTH_LONG
+                                ).show()
+
+                                initView()
+                            } else {
+                                Toast.makeText(
+                                    applicationContext,
+                                    "Tidak ada DB muka tersimpan pada server",
+                                    Toast.LENGTH_LONG
+                                ).show()
+
+                                initView()
+                            }
+                        } catch (e: JSONException) {
+                            e.printStackTrace()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    t.printStackTrace()
+                }
+            })
     }
 
     private fun nomedia() {
@@ -62,7 +151,6 @@ class MainActivity : AppCompatActivity() {
         val appDir = File(path)
         appDir.mkdirs()
         sessionManager?.putPath(path)
-        Log.d("RRR", sessionManager?.getPath().toString())
 
         // create .nomedia file
         val file = File(path, ".nomedia")
@@ -134,22 +222,31 @@ class MainActivity : AppCompatActivity() {
                 .setMessage("Masukkan Username")
                 .setView(editText)
                 .setPositiveButton("Simpan") { _, _ ->
-                    val name = editText.text.toString()
+
+                    val name = editText.text
+                        .toString()
+                        .toLowerCase(Locale.getDefault())
+                        .replace(" ", "")
+
                     if (name.isNotBlank()) {
-                        sessionManager?.putName(name)
+                        removeFace()
+                        sessionManager?.putName(name) // save name
+                        checkFace() // check if username have face registered in server
+                    } else {
+                        Toast.makeText(
+                                this,
+                                "Nama tidak boleh kosong",
+                                Toast.LENGTH_SHORT
+                            )
+                            .show()
                     }
-                    Toast.makeText(
-                            this,
-                            "Username berhasil disimpan dengan nama '$name'", Toast.LENGTH_SHORT
-                        )
-                        .show()
                 }
                 .setNegativeButton("Batal") { _, _ -> }
                 .create()
                 .show()
         }
 
-        register.setOnClickListener {
+        update.setOnClickListener {
 
             val intent = Intent(this, FaceActivity::class.java)
             intent.putExtra("from", "register")
@@ -164,11 +261,6 @@ class MainActivity : AppCompatActivity() {
             // init intent
             val intent = Intent(this, FaceActivity::class.java)
 
-            // check if there is a face in local storage
-            val file = File(sessionManager?.getPath(), "register.jpg")
-
-            // put code here to check if there is any registered face for user in server
-
             // start intent if gps ready
             if (sessionManager?.getLoc("lat") == "No Lat") {
                 Toast.makeText(
@@ -179,6 +271,9 @@ class MainActivity : AppCompatActivity() {
                     .show()
                 Log.d("MA", sessionManager?.getLoc("full").toString())
             } else {
+                // check if there is a face in local storage
+                val file = File(sessionManager?.getPath(), "register.jpg")
+
                 // set recognize or register for the next activity
                 if (file.exists()) {
                     intent.putExtra("from", "recognize")
@@ -198,11 +293,7 @@ class MainActivity : AppCompatActivity() {
 
         clear.setOnClickListener {
 
-            // remove local face
-            val file = File(sessionManager?.getPath(), "register.jpg")
-            if (file.exists()) {
-                file.delete()
-            }
+            removeFace()
 
             // clear session
             sessionManager?.clearSession()
@@ -213,6 +304,14 @@ class MainActivity : AppCompatActivity() {
                     Toast.LENGTH_SHORT
                 )
                 .show()
+        }
+    }
+
+    private fun removeFace() {
+        // remove local face
+        val file = File(sessionManager?.getPath(), "register.jpg")
+        if (file.exists()) {
+            file.delete()
         }
     }
 

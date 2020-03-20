@@ -26,6 +26,7 @@ import java.io.IOException
 class ResultActivity : AppCompatActivity() {
 
     private var sessionManager: SessionManager? = null
+    private var apiService: ApiService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,7 +70,7 @@ class ResultActivity : AppCompatActivity() {
     private fun sendResult() {
 
         // init API Service
-        val mApiService = client.create(ApiService::class.java)
+        apiService = client.create(ApiService::class.java)
 
         // init values
         val auth = getString(R.string.auth)
@@ -86,8 +87,8 @@ class ResultActivity : AppCompatActivity() {
             MultipartBody.Part.createFormData("img", file.name, requestFile)
 
         // post request
-        mApiService.postResult(auth, username!!, lat!!, lng!!, confidence!!, status!!, img)
-            .enqueue(object : Callback<ResponseBody> {
+        apiService?.postResult(auth, username!!, lat!!, lng!!, confidence!!, status!!, img)
+            ?.enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(
                     call: Call<ResponseBody>,
                     response: Response<ResponseBody>
@@ -99,7 +100,7 @@ class ResultActivity : AppCompatActivity() {
 
                             Toast.makeText(
                                 applicationContext,
-                                jsonRESULTS.getString("status"),
+                                jsonRESULTS.getString("message"),
                                 Toast.LENGTH_LONG
                             ).show()
                         } catch (e: JSONException) {

@@ -27,18 +27,32 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.luxand.FSDK;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
 import co.wangun.pnmfr.R;
+import co.wangun.pnmfr.api.ApiClient;
+import co.wangun.pnmfr.api.ApiService;
 import co.wangun.pnmfr.model.FaceResult;
 import co.wangun.pnmfr.utils.BmpConverter;
 import co.wangun.pnmfr.utils.DisplayUtils;
 import co.wangun.pnmfr.utils.FaceOverlayView;
 import co.wangun.pnmfr.utils.ImageUtils;
 import co.wangun.pnmfr.utils.SessionManager;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * FACE DETECT EVERY FRAME WIL CONVERT TO GRAY BITMAP SO THIS HAS HIGHER PERFORMANCE THAN RGB BITMAP
@@ -400,6 +414,68 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
     }
 
     /**
+     * Register face
+     */
+    private void registerFace() {
+
+        Log.d("HHH", "Hereee");
+
+        // init API Service
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+
+        // init values
+        String auth = getString(R.string.auth);
+        String username = sessionManager.getName();
+        String path = sessionManager.getPath();
+
+        File file = new File(path, "register.jpg");
+        RequestBody requestFile = RequestBody
+                .create(MediaType.parse("multipart/form-data"), file);
+        MultipartBody.Part img = MultipartBody.Part
+                .createFormData("img", file.getName(), requestFile);
+
+        // Post request
+        apiService.postUser(auth, username, img).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    // get results
+                    try {
+                        JSONObject json = new JSONObject(response.body().string());
+
+                        // show dialog
+                        AlertDialog.Builder builder = new AlertDialog.Builder(FaceActivity.this);
+                        builder.setMessage("Wajah kamu berhasil terdaftar. Sekarang kamu bisa presensi melalui fitur wajah.")
+                                .setPositiveButton("Absen", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent = new Intent(FaceActivity.this, FaceActivity.class);
+                                        intent.putExtra("from", "recognize");
+                                        startActivity(intent);
+                                        finish();
+                                    }
+                                })
+                                .setNegativeButton("Kembali", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent = new Intent(FaceActivity.this, MainActivity.class);
+                                        startActivity(intent);
+                                        finish();
+                                    }
+                                })
+                                .create()
+                                .show();
+
+                    } catch (JSONException | IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            }
+        });
+    }
+    /**
      * Matching faces
      */
     private void matchingFaces() {
@@ -618,19 +694,7 @@ public final class FaceActivity extends AppCompatActivity implements SurfaceHold
                                             BmpConverter.saveImage(resizedBitmap, from, FaceActivity.this);
 
                                             if (from.equals("register")) {
-                                                AlertDialog.Builder builder = new AlertDialog.Builder(FaceActivity.this);
-                                                builder.setMessage("Wajah kamu sudah terdaftar. Sekarang kamu bisa presensi melalui fitur wajah.")
-                                                        .setNeutralButton("OK", new DialogInterface.OnClickListener() {
-                                                            public void onClick(DialogInterface dialog, int which) {
-                                                                Intent intent = new Intent(FaceActivity.this, FaceActivity.class);
-                                                                intent.putExtra("from", "recognize");
-                                                                startActivity(intent);
-                                                                finish();
-                                                            }
-                                                        })
-                                                        .create()
-                                                        .show();
-                                                //Toast.makeText(getApplicationContext(), "Muka berhasil didaftarkan", Toast.LENGTH_LONG).show();
+                                                registerFace();
                                             } else {
                                                 matchingFaces();
                                             }

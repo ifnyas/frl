@@ -3,10 +3,16 @@ package co.wangun.pnmfr.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.StrictMode
 import android.util.Base64
+import android.util.Log
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
+
 
 object BmpConverter {
 
@@ -44,6 +50,29 @@ object BmpConverter {
             out.flush()
             out.close()
         } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+
+    fun downloadImage(link: String, context: Context) {
+
+        // TODO: please change this to async
+        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+        StrictMode.setThreadPolicy(policy)
+        // not recommended method
+
+        try {
+            val url = URL(link)
+            val connection = url
+                .openConnection() as HttpURLConnection
+            connection.doInput = true
+            connection.connect()
+            val input = connection.inputStream
+            val bmp = BitmapFactory.decodeStream(input)
+            saveImage(bmp, "register", context)
+            Log.d("BmpConverter", "image saved")
+        } catch (e: IOException) {
             e.printStackTrace()
         }
     }
